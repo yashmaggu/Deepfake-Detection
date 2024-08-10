@@ -1,0 +1,10 @@
+prometheus-flask-exporter
+flask
+flask_cors
+torch
+torchvision
+numpy
+matplotlib
+facenet_pytorch
+opencv-python
+

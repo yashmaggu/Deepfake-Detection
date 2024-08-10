@@ -1,0 +1,76 @@
+version: "3"
+services:
+
+  react-app-service:
+    container_name: react-app
+    image: dreamfist/react-dd-app:latest
+    ports:
+      - "3006:3006"
+    restart: unless-stopped
+    volumes:
+      - ./deepfake/src:/app/src
+    networks:
+      service-network:
+
+
+  flask-app-service:
+    container_name: flask-app
+    image: dreamfist/flask-dd-app:latest
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    volumes:
+      - ./app:/app
+    networks:
+      service-network:
+
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - flask-app-service
+    networks:
+      service-network:
+
+
+  grafana:
+    image: grafana/grafana-oss:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    links:
+      - prometheus:prometheus
+    volumes:
+      - ./grafana:/var/lib/grafana
+    depends_on:
+      - flask-app-service
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      service-network:
+
+
+  nginx_service:
+    image: nginx:latest
+    container_name: nginx_service
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - flask-app-service
+    networks:
+      service-network:
+
+
+networks:
+  service-network:
+    name: service-network
